@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Clínica Odontológica</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'clinica/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Clínica Odontológica</h1>
+        <nav>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'lista_pacientes' %}">Pacientes</a>
+                <a href="{% url 'agenda' %}">Agenda</a>
+                <a href="{% url 'financeiro' %}">Financeiro</a>
+                <a href="{% url 'relatorios' %}">Relatórios</a>
+                <span class="user-info">Logado como: {{ user.username }}</span>
+                <a href="{% url 'logout' %}">Sair</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <small>Sistema de Gestão de Clínica Odontológica - Trabalho Acadêmico</small>
+    </footer>
+</body>
+</html>

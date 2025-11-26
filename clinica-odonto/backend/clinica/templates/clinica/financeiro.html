@@ -1,0 +1,35 @@
+{% extends "clinica/base.html" %}
+
+{% block content %}
+<h2>Financeiro</h2>
+
+<p><strong>Total recebido:</strong> R$ {{ total_recebido }}</p>
+<p><strong>Total pendente:</strong> R$ {{ total_pendente }}</p>
+
+{% if pagamentos %}
+<table>
+    <thead>
+        <tr>
+            <th>Paciente</th>
+            <th>Valor</th>
+            <th>Forma</th>
+            <th>Parcelas</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in pagamentos %}
+        <tr>
+            <td>{{ p.consulta.paciente.nome }}</td>
+            <td>R$ {{ p.valor }}</td>
+            <td>{{ p.forma_pagamento }}</td>
+            <td>{{ p.parcelas }}</td>
+            <td>{{ p.status }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Nenhum pagamento registrado.</p>
+{% endif %}
+{% endblock %}

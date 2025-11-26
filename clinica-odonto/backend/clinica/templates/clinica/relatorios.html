@@ -1,0 +1,15 @@
+{% extends "clinica/base.html" %}
+
+{% block content %}
+<h2>Relatórios</h2>
+
+<ul>
+    <li>Total de pacientes: {{ total_pacientes }}</li>
+    <li>Total de consultas: {{ total_consultas }}</li>
+    <li>Atendimentos concluídos: {{ atendimentos_concluidos }}</li>
+    <li>Faturamento (pagos): R$ {{ faturamento }}</li>
+    <li>Pagamentos pendentes: {{ pendentes }}</li>
+</ul>
+
+<p>Para gráficos visuais, você pode usar bibliotecas simples de JS ou apenas apresentar esses números em slides.</p>
+{% endblock %}
