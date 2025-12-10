@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Clinica Odonto — Sistema Completo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#0b5fff;--success:#10b981;--danger:#ef4444;--warning:#f59e0b}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:var(--bg);color:#111}
+    header{background:var(--card);padding:12px 16px;box-shadow:0 2px 4px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:12px;border-bottom:2px solid #0b5fff}
+    h1{font-size:1rem;margin:0}
+    nav{display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap}
+    button.tab{background:#0b5fff;color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:.85rem;white-space:nowrap}
+    button.tab:hover{background:#0a4acc;opacity:.9}
+    button.tab.active{background:#0b5fff;color:#fff;box-shadow:0 0 0 2px #fff,0 0 0 4px #0b5fff}
+    button{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:500}
+    button:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 2px 4px rgba(0,0,0,.2)}
+    button.danger{background:var(--danger)}
+    button.success{background:var(--success)}
+    button.warning{background:var(--warning)}
+    main{padding:16px;max-width:1200px;margin:16px auto}
+    .card{background:var(--card);padding:12px;border-radius:8px;border:1px solid #eee;margin-bottom:12px}
+    input,select,textarea{padding:8px;border:1px solid #ddd;border-radius:6px;width:100%;box-sizing:border-box;font-size:.9rem}
+    label{font-size:.9rem;color:var(--muted);display:block;margin:8px 0 4px}
+    table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.85rem}
+    th,td{padding:8px;border-bottom:1px solid #f1f1f1;text-align:left}
+    th{background:#f9fafb;font-weight:600}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .col{flex:1;min-width:200px}
+    .muted{color:var(--muted)}
+    .small{font-size:.85rem}
+    .badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:.8rem;font-weight:600}
+    .badge.pending{background:#fef3c7;color:#92400e}
+    .badge.paid{background:#d1fae5;color:#065f46}
+    .badge.agendado{background:#dbeafe;color:#0c2d6b}
+    .badge.concluido{background:#d1fae5;color:#065f46}
+    .badge.cancelado{background:#fee2e2;color:#7f1d1d}
+    .hidden{display:none!important}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000}
+    .modal.active{display:flex}
+    .modal-content{background:var(--card);padding:20px;border-radius:8px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+    .alert{padding:12px;border-radius:6px;margin-bottom:12px;font-size:.9rem}
+    .alert.success{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
+    .alert.error{background:#fee2e2;color:#7f1d1d;border:1px solid #fecaca}
+    .alert.warning{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+    .stat-card{background:var(--card);padding:12px;border-radius:8px;border:1px solid #eee;text-align:center}
+    .stat-value{font-size:1.5rem;font-weight:bold;color:var(--accent)}
+    .stat-label{font-size:.8rem;color:var(--muted);margin-top:4px}
+    .chart-container{position:relative;height:300px;margin-bottom:12px}
+    .user-info{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:500;color:#333;background:#f0f0f0;padding:6px 10px;border-radius:4px}
+    .logout-btn{background:var(--danger);color:#fff;border:0;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:.8rem;font-weight:600}
+    .logout-btn:hover{opacity:.85}
+    .restricted{opacity:.5;pointer-events:none}
+    .image-preview{width:100px;height:100px;border-radius:6px;border:1px solid #ddd;object-fit:cover;margin-top:8px}
+    strong{font-weight:600}
+  </style>
+</head>
+<body>
+  <!-- Modal de Login -->
+  <div id="loginModal" class="modal active">
+    <div class="modal-content">
+      <h2>Clínica Odonto — Login</h2>
+      <div style="margin-top:16px">
+        <label>Usuário</label>
+        <input id="loginUser" placeholder="usuario">
+        <label>Senha</label>
+        <input id="loginPass" type="password" placeholder="senha">
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button onclick="app.login()">Entrar</button>
+          <button onclick="app.toggleRegister()" style="background:#666">Novo Usuário</button>
+        </div>
+        <div id="registerForm" class="hidden" style="margin-top:12px;padding-top:12px;border-top:1px solid #eee">
+          <label>Nome</label>
+          <input id="regName">
+          <label>Usuário</label>
+          <input id="regUser">
+          <label>Senha</label>
+          <input id="regPass" type="password">
+          <label>Perfil</label>
+          <select id="regPerfil">
+            <option value="secretaria">Secretária</option>
+            <option value="dentista">Dentista</option>
+            <option value="admin">Administrador</option>
+          </select>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button onclick="app.register()" class="success">Registrar</button>
+            <button onclick="app.toggleRegister()" style="background:#666">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header id="mainHeader" class="hidden">
+    <h1>Clínica Odonto — Sistema Integrado</h1>
+    <div style="width:100%;display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="tab" data-tab="dashboard">Dashboard</button>
+      <button class="tab" data-tab="pacientes">Pacientes</button>
+      <button class="tab" data-tab="agenda">Agenda</button>
+      <button class="tab" data-tab="prontuario">Prontuário</button>
+      <button class="tab" data-tab="financeiro">Financeiro</button>
+      <button class="tab" data-tab="relatorios">Relatórios</button>
+      <button class="tab" data-tab="usuarios">Usuários</button>
+      <button class="tab" data-tab="logs">Logs</button>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <div class="user-info" id="userInfo"></div>
+        <button class="logout-btn" onclick="app.logout()">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent" class="hidden">
+    <!-- Dashboard -->
+    <section id="dashboard" class="tabpane">
+      <div class="card">
+        <strong>Dashboard</strong>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value" id="cntPacientes">0</div>
+            <div class="stat-label">Pacientes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="cntConsultas">0</div>
+            <div class="stat-label">Consultas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="cntPendentes">0</div>
+            <div class="stat-label">Pagamentos Pendentes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="cntConcluidas">0</div>
+            <div class="stat-label">Consultas Concluídas</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Faturamento Mensal</strong>
+        <div class="chart-container">
+          <canvas id="chartFaturamento"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Status de Pagamentos</strong>
+        <div class="chart-container">
+          <canvas id="chartPagamentos"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Próximas Consultas</strong>
+        <table><thead><tr><th>Paciente</th><th>Dentista</th><th>Data/Hora</th><th>Status</th></tr></thead><tbody id="proximasConsultas"></tbody></table>
+      </div>
+    </section>
+
+    <!-- Pacientes -->
+    <section id="pacientes" class="tabpane" style="display:none">
+      <div class="card">
+        <strong>Novo Paciente</strong>
+        <div style="margin-top:8px">
+          <div class="row">
+            <div class="col"><label>Nome</label><input id="p_nome"></div>
+            <div class="col"><label>CPF</label><input id="p_cpf"></div>
+          </div>
+          <div class="row">
+            <div class="col"><label>Telefone</label><input id="p_telefone"></div>
+            <div class="col"><label>Data de Nascimento</label><input id="p_nasc" type="date"></div>
+          </div>
+          <label>Endereço</label><input id="p_endereco">
+          <label>Alergias/Observações</label><textarea id="p_alergias" rows="3"></textarea>
+          <div style="margin-top:8px"><button id="btnAddPaciente">Salvar Paciente</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <strong>Lista de Pacientes</strong>
+        <div style="margin-bottom:8px">
+          <input id="searchPaciente" placeholder="Buscar paciente..." style="max-width:300px">
+        </div>
+        <table id="tblPacientes"><thead><tr><th>Nome</th><th>Telefone</th><th>CPF</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <!-- Agenda -->
+    <section id="agenda" class="tabpane" style="display:none">
+      <div class="card">
+        <strong>Agendar Consulta</strong>
+        <div style="margin-top:8px">
+          <div class="row">
+            <div class="col"><label>Paciente</label><select id="a_paciente"></select></div>
+            <div class="col"><label>Dentista</label><input id="a_dentista" placeholder="Nome do dentista"></div>
+          </div>
+          <div class="row">
+            <div class="col"><label>Data e Hora</label><input id="a_data" type="datetime-local"></div>
+            <div class="col"><label>Valor (R$)</label><input id="a_valor" type="number" step="0.01"></div>
+          </div>
+          <div class="row">
+            <div class="col"><label>Tipo de Tratamento</label><input id="a_tratamento" placeholder="Ex: Limpeza, Extração"></div>
+            <div class="col"><label>Forma de Pagamento</label><select id="a_pagamento"><option value="avista">À vista</option><option value="parcelado">Parcelado</option></select></div>
+          </div>
+          <label>Observações</label><textarea id="a_obs" rows="2"></textarea>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button id="btnAddConsulta">Agendar</button>
+            <button id="btnEnviarLembrete" style="background:var(--warning)">Enviar Lembretes</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <strong>Agenda de Consultas</strong>
+        <table id="tblConsultas"><thead><tr><th>Paciente</th><th>Dentista</th><th>Data/Hora</th><th>Tratamento</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <!-- Prontuário -->
+    <section id="prontuario" class="tabpane" style="display:none">
+      <div class="card">
+        <strong>Novo Prontuário</strong>
+        <div style="margin-top:8px">
+          <label>Paciente</label>
+          <select id="pr_paciente"></select>
+          <label>Histórico de Atendimentos</label>
+          <textarea id="pr_historico" rows="3" placeholder="Descrever atendimentos anteriores"></textarea>
+          <label>Evolução do Tratamento</label>
+          <textarea id="pr_evolucao" rows="3" placeholder="Progresso do tratamento atual"></textarea>
+          <label>Alergias</label>
+          <textarea id="pr_alergias" rows="2" placeholder="Alergias conhecidas do paciente"></textarea>
+          <label>Observações Clínicas</label>
+          <textarea id="pr_observacoes" rows="2" placeholder="Observações gerais"></textarea>
+          <label>Upload de Imagem (Fotografia/Radiografia)</label>
+          <input id="pr_imagem" type="file" accept="image/*">
+          <div id="pr_imagePreview"></div>
+          <div style="margin-top:8px"><button id="btnAddProntuario">Salvar Prontuário</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <strong>Prontuários</strong>
+        <table id="tblProntuarios"><thead><tr><th>Paciente</th><th>Histórico</th><th>Alergias</th><th>Imagem</th><th>Data</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <!-- Financeiro -->
+    <section id="financeiro" class="tabpane" style="display:none">
+      <div class="card">
+        <strong>Controle de Pagamentos</strong>
+        <div class="row" style="margin-bottom:12px">
+          <div class="col" style="min-width:auto"><label>Filtrar:</label><select id="filterStatus" style="width:150px"><option value="">Todos</option><option value="pendente">Pendentes</option><option value="pago">Pagos</option><option value="parcelado">Parcelados</option></select></div>
+        </div>
+        <table id="tblPagamentos"><thead><tr><th>Paciente</th><th>Valor</th><th>Forma</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div class="card">
+        <strong>Resumo Financeiro</strong>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value" id="totalRecebido">R$ 0</div>
+            <div class="stat-label">Total Recebido</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalPendente">R$ 0</div>
+            <div class="stat-label">Pendente</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalParcelado">R$ 0</div>
+            <div class="stat-label">Parcelado</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Relatórios -->
+    <section id="relatorios" class="tabpane" style="display:none">
+      <div class="card">
+        <strong>Relatórios Gerenciais</strong>
+        <div class="row" style="margin-bottom:12px">
+          <div class="col" style="min-width:auto"><button id="btnRelPatientes" style="background:var(--accent)">Relatório de Pacientes</button></div>
+          <div class="col" style="min-width:auto"><button id="btnRelTratamentos" style="background:var(--success)">Tratamentos Realizados</button></div>
+          <div class="col" style="min-width:auto"><button id="btnRelFaturamento" style="background:var(--warning)">Faturamento Mensal</button></div>
+          <div class="col" style="min-width:auto"><button id="btnRelPendentes" style="background:var(--danger)">Valores Pendentes</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Gráfico de Faturamento Mensal</strong>
+        <div class="chart-container">
+          <canvas id="chartFaturamentoDetalhado"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Tipos de Tratamento</strong>
+        <div class="chart-container">
+          <canvas id="chartTratamentos"></canvas>
+        </div>
+      </div>
+
+      <div class="card" id="relatorioResultado"></div>
+    </section>
+
+    <!-- Usuários -->
+    <section id="usuarios" class="tabpane" style="display:none">
+      <div class="card" id="addUserCard">
+        <strong>Novo Usuário</strong>
+        <div style="margin-top:8px">
+          <div class="row">
+            <div class="col"><label>Nome Completo</label><input id="u_nome"></div>
+            <div class="col"><label>Usuário</label><input id="u_user"></div>
+          </div>
+          <div class="row">
+            <div class="col"><label>Senha</label><input id="u_pass" type="password"></div>
+            <div class="col"><label>Perfil</label><select id="u_perfil"><option value="secretaria">Secretária</option><option value="dentista">Dentista</option><option value="admin">Administrador</option></select></div>
+          </div>
+          <div style="margin-top:8px"><button id="btnAddUser">Criar Usuário</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <strong>Lista de Usuários</strong>
+        <table id="tblUsuarios"><thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Ações</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <!-- Logs -->
+    <section id="logs" class="tabpane" style="display:none">
+      <div class="card">
+        <strong>Log de Ações</strong>
+        <div style="margin-bottom:8px">
+          <button id="btnLimparLogs" style="background:var(--danger)">Limpar Logs</button>
+        </div>
+        <table id="tblLogs"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Sistema de Gestão de Clínica Odontológica
+    const app = {
+      usuarioAtual: null,
+      chartInstances: {},
+
+      // Inicialização
+      init() {
+        this.initStorage();
+        this.setupEventListeners();
+        this.checkLogin();
+      },
+
+      initStorage() {
+        const defaults = {
+          usuarios: [
+            { id: 1, nome: 'Admin', user: 'admin', pass: 'admin123', perfil: 'admin', ativo: true },
+            { id: 2, nome: 'Dr. Silva', user: 'silva', pass: '123456', perfil: 'dentista', ativo: true },
+            { id: 3, nome: 'Secretária Maria', user: 'maria', pass: '123456', perfil: 'secretaria', ativo: true }
+          ],
+          pacientes: [],
+          consultas: [],
+          prontuarios: [],
+          pagamentos: [],
+          logs: []
+        };
+        Object.entries(defaults).forEach(([k, v]) => {
+          if (!localStorage.getItem(k)) localStorage.setItem(k, JSON.stringify(v));
+        });
+      },
+
+      storage: {
+        get(k) { return JSON.parse(localStorage.getItem(k) || '[]'); },
+        set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+      },
+
+      log(acao, descricao) {
+        if (!this.usuarioAtual) return;
+        const logs = this.storage.get('logs');
+        logs.push({
+          id: Date.now(),
+          data: new Date().toLocaleString('pt-BR'),
+          usuario: this.usuarioAtual.nome,
+          acao,
+          descricao
+        });
+        this.storage.set('logs', logs);
+      },
+
+      checkPermission(perfisPermitidos) {
+        return perfisPermitidos.includes(this.usuarioAtual.perfil);
+      },
+
+      toggleRegister() {
+        const form = q('#registerForm');
+        form.classList.toggle('hidden');
+      },
+
+      login() {
+        const user = q('#loginUser').value;
+        const pass = q('#loginPass').value;
+        const usuarios = this.storage.get('usuarios');
+        const found = usuarios.find(u => u.user === user && u.pass === pass && u.ativo);
+        if (found) {
+          this.usuarioAtual = found;
+          q('#loginModal').classList.remove('active');
+          q('#mainHeader').classList.remove('hidden');
+          q('#mainContent').classList.remove('hidden');
+          q('#userInfo').innerHTML = `${found.nome} (${found.perfil})`;
+          this.log('LOGIN', `Usuário ${found.nome} fez login`);
+          this.setupTabs();
+          this.render();
+        } else {
+          alert('Usuário ou senha inválidos!');
+        }
+      },
+
+      logout() {
+        if (confirm('Deseja sair?')) {
+          this.log('LOGOUT', `Usuário ${this.usuarioAtual.nome} fez logout`);
+          this.usuarioAtual = null;
+          q('#loginModal').classList.add('active');
+          q('#mainHeader').classList.add('hidden');
+          q('#mainContent').classList.add('hidden');
+          q('#loginUser').value = '';
+          q('#loginPass').value = '';
+          this.clearForm();
+        }
+      },
+
+      register() {
+        const nome = q('#regName').value;
+        const user = q('#regUser').value;
+        const pass = q('#regPass').value;
+        const perfil = q('#regPerfil').value;
+        if (!nome || !user || !pass) { alert('Preencha todos os campos'); return; }
+        const usuarios = this.storage.get('usuarios');
+        if (usuarios.find(u => u.user === user)) { alert('Usuário já existe'); return; }
+        usuarios.push({
+          id: Math.max(...usuarios.map(u => u.id), 0) + 1,
+          nome, user, pass, perfil, ativo: true
+        });
+        this.storage.set('usuarios', usuarios);
+        alert('Usuário criado com sucesso!');
+        this.toggleRegister();
+        this.clearForm();
+      },
+
+      setupTabs() {
+        qAll('.tab').forEach(btn => {
+          btn.onclick = () => {
+            qAll('.tabpane').forEach(p => p.style.display = 'none');
+            qAll('.tab').forEach(b => b.classList.remove('active'));
+            q(`#${btn.dataset.tab}`).style.display = 'block';
+            btn.classList.add('active');
+            this.onTabChange(btn.dataset.tab);
+          };
+        });
+
+        // Restrições por perfil - ocultar abas inteiras
+        if (this.usuarioAtual.perfil === 'secretaria') {
+          q('.tab[data-tab="usuarios"]').style.display = 'none';
+          q('.tab[data-tab="logs"]').style.display = 'none';
+          q('.tab[data-tab="relatorios"]').style.display = 'none';
+        }
+        if (this.usuarioAtual.perfil === 'dentista') {
+          q('.tab[data-tab="usuarios"]').style.display = 'none';
+          q('.tab[data-tab="logs"]').style.display = 'none';
+          q('.tab[data-tab="financeiro"]').style.display = 'none';
+        }
+
+        // Clique inicial no Dashboard
+        q('.tab[data-tab="dashboard"]').click();
+      },
+
+      onTabChange(tab) {
+        if (tab === 'relatorios') this.renderRelatorios();
+        if (tab === 'usuarios') this.renderUsuarios();
+        if (tab === 'logs') this.renderLogs();
+        if (tab === 'dashboard') this.renderDashboard();
+      },
+
+      setupEventListeners() {
+        // Pacientes
+        q('#btnAddPaciente').onclick = () => this.addPaciente();
+        q('#searchPaciente').onkeyup = () => this.renderPacientes();
+
+        // Consultas
+        q('#btnAddConsulta').onclick = () => this.addConsulta();
+        q('#btnEnviarLembrete').onclick = () => this.enviarLembretes();
+
+        // Prontuários
+        q('#btnAddProntuario').onclick = () => this.addProntuario();
+        q('#pr_imagem').onchange = (e) => this.previewImagem(e);
+
+        // Financeiro
+        q('#filterStatus').onchange = () => this.renderPagamentos();
+
+        // Relatórios
+        q('#btnRelPatientes').onclick = () => this.relPatientes();
+        q('#btnRelTratamentos').onclick = () => this.relTratamentos();
+        q('#btnRelFaturamento').onclick = () => this.relFaturamento();
+        q('#btnRelPendentes').onclick = () => this.relPendentes();
+
+        // Usuários
+        q('#btnAddUser').onclick = () => this.addUsuario();
+
+        // Logs
+        q('#btnLimparLogs').onclick = () => this.limparLogs();
+      },
+
+      // === PACIENTES ===
+      addPaciente() {
+        const nome = q('#p_nome').value;
+        const telefone = q('#p_telefone').value;
+        const endereco = q('#p_endereco').value;
+        const nasc = q('#p_nasc').value;
+        const cpf = q('#p_cpf').value;
+        const alergias = q('#p_alergias').value;
+
+        if (!nome || !cpf) { alert('Preencha Nome e CPF'); return; }
+        const pacientes = this.storage.get('pacientes');
+        if (pacientes.find(p => p.cpf === cpf)) { alert('CPF já cadastrado'); return; }
+
+        pacientes.push({
+          id: Date.now(),
+          nome, telefone, endereco, data_nasc: nasc, cpf, alergias,
+          data_cadastro: new Date().toLocaleString('pt-BR')
+        });
+        this.storage.set('pacientes', pacientes);
+        this.log('CADASTRO_PACIENTE', `Paciente ${nome} cadastrado`);
+        this.clearForm();
+        this.renderPacientes();
+      },
+
+      renderPacientes() {
+        const search = q('#searchPaciente')?.value.toLowerCase() || '';
+        const pacientes = this.storage.get('pacientes').filter(p => p.nome.toLowerCase().includes(search));
+        const tbody = q('#tblPacientes tbody');
+        tbody.innerHTML = '';
+
+        pacientes.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${p.nome}</td>
+            <td>${p.telefone}</td>
+            <td>${p.cpf}</td>
+            <td>
+              <button style="font-size:.7rem" onclick="app.editarPaciente('${p.id}')">Editar</button>
+              <button style="font-size:.7rem;background:var(--danger)" onclick="app.deletarPaciente('${p.id}')">Deletar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Atualizar selects
+        qAll('#a_paciente, #pr_paciente').forEach(sel => {
+          sel.innerHTML = '';
+          pacientes.forEach(p => sel.add(new Option(p.nome, p.id)));
+        });
+        q('#cntPacientes').textContent = pacientes.length;
+      },
+
+      editarPaciente(id) {
+        const p = this.storage.get('pacientes').find(x => x.id == id);
+        if (!p) return;
+        q('#p_nome').value = p.nome;
+        q('#p_telefone').value = p.telefone;
+        q('#p_endereco').value = p.endereco;
+        q('#p_nasc').value = p.data_nasc;
+        q('#p_cpf').value = p.cpf;
+        q('#p_alergias').value = p.alergias;
+        // Botão muda para "Atualizar"
+        const btn = q('#btnAddPaciente');
+        btn.textContent = 'Atualizar Paciente';
+        btn.onclick = () => {
+          const pacientes = this.storage.get('pacientes');
+          const idx = pacientes.findIndex(x => x.id == id);
+          if (idx >= 0) {
+            pacientes[idx] = {
+              ...pacientes[idx],
+              nome: q('#p_nome').value,
+              telefone: q('#p_telefone').value,
+              endereco: q('#p_endereco').value,
+              data_nasc: q('#p_nasc').value,
+              cpf: q('#p_cpf').value,
+              alergias: q('#p_alergias').value
+            };
+            this.storage.set('pacientes', pacientes);
+            this.log('ATUALIZAR_PACIENTE', `Paciente ${pacientes[idx].nome} atualizado`);
+            btn.textContent = 'Salvar Paciente';
+            btn.onclick = () => this.addPaciente();
+            this.clearForm();
+            this.renderPacientes();
+          }
+        };
+      },
+
+      deletarPaciente(id) {
+        if (!confirm('Tem certeza?')) return;
+        let pacientes = this.storage.get('pacientes');
+        const nome = pacientes.find(p => p.id == id)?.nome;
+        pacientes = pacientes.filter(p => p.id != id);
+        this.storage.set('pacientes', pacientes);
+        this.log('DELETAR_PACIENTE', `Paciente ${nome} deletado`);
+        this.renderPacientes();
+      },
+
+      // === CONSULTAS ===
+      addConsulta() {
+        const pacienteId = q('#a_paciente').value;
+        const dentista = q('#a_dentista').value;
+        const data = q('#a_data').value;
+        const valor = q('#a_valor').value;
+        const tratamento = q('#a_tratamento').value;
+        const pagamento = q('#a_pagamento').value;
+        const obs = q('#a_obs').value;
+
+        if (!pacienteId || !dentista || !data || !valor) { alert('Preencha campos obrigatórios'); return; }
+
+        const pacientes = this.storage.get('pacientes');
+        const paciente = pacientes.find(p => p.id == pacienteId);
+        if (!paciente) return;
+
+        const consulta = {
+          id: Date.now(),
+          pacienteId, pacienteNome: paciente.nome,
+          dentista, data, valor: parseFloat(valor), tratamento, pagamento, obs,
+          status: 'agendado', data_criacao: new Date().toLocaleString('pt-BR')
+        };
+
+        const consultas = this.storage.get('consultas');
+        consultas.push(consulta);
+        this.storage.set('consultas', consultas);
+
+        // Criar pagamento
+        const pagamentos = this.storage.get('pagamentos');
+        pagamentos.push({
+          id: Date.now(),
+          consultaId: consulta.id,
+          pacienteNome: paciente.nome,
+          valor: parseFloat(valor),
+          forma: pagamento,
+          status: 'pendente',
+          data: new Date().toLocaleString('pt-BR')
+        });
+        this.storage.set('pagamentos', pagamentos);
+
+        this.log('AGENDAR_CONSULTA', `Consulta agendada para ${paciente.nome} com ${dentista}`);
+        this.clearForm();
+        this.renderConsultas();
+        this.renderPagamentos();
+      },
+
+      renderConsultas() {
+        const consultas = this.storage.get('consultas');
+        const tbody = q('#tblConsultas tbody');
+        tbody.innerHTML = '';
+
+        consultas.forEach(c => {
+          const tr = document.createElement('tr');
+          const statusClass = c.status === 'agendado' ? 'agendado' : c.status === 'concluído' ? 'concluido' : 'cancelado';
+          tr.innerHTML = `
+            <td>${c.pacienteNome}</td>
+            <td>${c.dentista}</td>
+            <td>${new Date(c.data).toLocaleString('pt-BR')}</td>
+            <td>${c.tratamento}</td>
+            <td><span class="badge ${statusClass}">${c.status}</span></td>
+            <td>
+              <button style="font-size:.7rem" onclick="app.alterarStatusConsulta('${c.id}')">Alterar Status</button>
+              <button style="font-size:.7rem;background:var(--danger)" onclick="app.deletarConsulta('${c.id}')">Cancelar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        q('#cntConsultas').textContent = consultas.length;
+        q('#cntConcluidas').textContent = consultas.filter(c => c.status === 'concluído').length;
+        
+        // Próximas consultas
+        const futuras = consultas.filter(c => new Date(c.data) > new Date()).sort((a, b) => new Date(a.data) - new Date(b.data)).slice(0, 5);
+        const proximasTable = q('#proximasConsultas');
+        proximasTable.innerHTML = '';
+        futuras.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${c.pacienteNome}</td>
+            <td>${c.dentista}</td>
+            <td>${new Date(c.data).toLocaleString('pt-BR')}</td>
+            <td><span class="badge agendado">Agendado</span></td>
+          `;
+          proximasTable.appendChild(tr);
+        });
+      },
+
+      alterarStatusConsulta(id) {
+        const consultas = this.storage.get('consultas');
+        const idx = consultas.findIndex(c => c.id == id);
+        if (idx < 0) return;
+        const statuses = ['agendado', 'concluído', 'cancelado'];
+        const atual = statuses.indexOf(consultas[idx].status);
+        consultas[idx].status = statuses[(atual + 1) % statuses.length];
+        this.storage.set('consultas', consultas);
+        this.log('ALTERAR_STATUS', `Consulta ${consultas[idx].pacienteNome} alterada para ${consultas[idx].status}`);
+        this.renderConsultas();
+      },
+
+      deletarConsulta(id) {
+        let consultas = this.storage.get('consultas');
+        const c = consultas.find(x => x.id == id);
+        consultas = consultas.filter(x => x.id != id);
+        this.storage.set('consultas', consultas);
+        this.log('CANCELAR_CONSULTA', `Consulta de ${c.pacienteNome} cancelada`);
+        this.renderConsultas();
+      },
+
+      enviarLembretes() {
+        const consultas = this.storage.get('consultas').filter(c => c.status === 'agendado');
+        let msg = `Lembretes enviados para ${consultas.length} consulta(s):\n\n`;
+        consultas.forEach(c => {
+          msg += `📱 ${c.pacienteNome} - ${new Date(c.data).toLocaleString('pt-BR')}\n`;
+        });
+        alert(msg);
+        this.log('ENVIAR_LEMBRETES', `Lembretes enviados para ${consultas.length} pacientes`);
+      },
+
+      // === PRONTUÁRIOS ===
+      addProntuario() {
+        const pacienteId = q('#pr_paciente').value;
+        const historico = q('#pr_historico').value;
+        const evolucao = q('#pr_evolucao').value;
+        const alergias = q('#pr_alergias').value;
+        const observacoes = q('#pr_observacoes').value;
+        const imagemInput = q('#pr_imagem');
+
+        if (!pacienteId) { alert('Selecione um paciente'); return; }
+
+        const pacientes = this.storage.get('pacientes');
+        const paciente = pacientes.find(p => p.id == pacienteId);
+
+        let imagem = null;
+        if (imagemInput.files && imagemInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            imagem = e.target.result;
+            this.salvarProntuario(pacienteId, paciente.nome, historico, evolucao, alergias, observacoes, imagem);
+          };
+          reader.readAsDataURL(imagemInput.files[0]);
+        } else {
+          this.salvarProntuario(pacienteId, paciente.nome, historico, evolucao, alergias, observacoes, null);
+        }
+      },
+
+      salvarProntuario(pacienteId, pacienteNome, historico, evolucao, alergias, observacoes, imagem) {
+        const prontuarios = this.storage.get('prontuarios');
+        prontuarios.push({
+          id: Date.now(),
+          pacienteId, pacienteNome, historico, evolucao, alergias, observacoes, imagem,
+          data: new Date().toLocaleString('pt-BR')
+        });
+        this.storage.set('prontuarios', prontuarios);
+        this.log('CRIAR_PRONTUARIO', `Prontuário de ${pacienteNome} criado`);
+        this.clearForm();
+        this.renderProntuarios();
+      },
+
+      renderProntuarios() {
+        const prontuarios = this.storage.get('prontuarios');
+        const tbody = q('#tblProntuarios tbody');
+        tbody.innerHTML = '';
+
+        prontuarios.forEach(p => {
+          const tr = document.createElement('tr');
+          const hist = (p.historico || '').substring(0, 50);
+          const imgHtml = p.imagem ? `<img src="${p.imagem}" class="image-preview" onclick="app.viewImage('${p.id}')">` : '-';
+          tr.innerHTML = `
+            <td>${p.pacienteNome}</td>
+            <td>${hist}...</td>
+            <td>${p.alergias || '-'}</td>
+            <td>${imgHtml}</td>
+            <td>${p.data}</td>
+            <td>
+              <button style="font-size:.7rem" onclick="app.viewProntuario('${p.id}')">Visualizar</button>
+              <button style="font-size:.7rem;background:var(--danger)" onclick="app.deletarProntuario('${p.id}')">Deletar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      },
+
+      viewProntuario(id) {
+        const p = this.storage.get('prontuarios').find(x => x.id == id);
+        if (!p) return;
+        const msg = `
+Prontuário de ${p.pacienteNome}
+
+Histórico: ${p.historico}
+
+Evolução: ${p.evolucao}
+
+Alergias: ${p.alergias}
+
+Observações: ${p.observacoes}
+
+Data: ${p.data}
+        `;
+        alert(msg);
+      },
+
+      viewImage(id) {
+        const p = this.storage.get('prontuarios').find(x => x.id == id);
+        if (p && p.imagem) {
+          const win = window.open();
+          win.document.write(`<img src="${p.imagem}" style="width:100%;height:auto;">`);
+        }
+      },
+
+      deletarProntuario(id) {
+        if (!confirm('Deletar prontuário?')) return;
+        let prontuarios = this.storage.get('prontuarios');
+        prontuarios = prontuarios.filter(p => p.id != id);
+        this.storage.set('prontuarios', prontuarios);
+        this.log('DELETAR_PRONTUARIO', `Prontuário deletado`);
+        this.renderProntuarios();
+      },
+
+      previewImagem(e) {
+        const preview = q('#pr_imagePreview');
+        preview.innerHTML = '';
+        if (e.target.files && e.target.files[0]) {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            const img = document.createElement('img');
+            img.src = evt.target.result;
+            img.style.maxWidth = '150px';
+            img.style.borderRadius = '6px';
+            preview.appendChild(img);
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      },
+
+      // === PAGAMENTOS ===
+      renderPagamentos() {
+        const filtro = q('#filterStatus')?.value || '';
+        const pagamentos = this.storage.get('pagamentos').filter(p => !filtro || p.status === filtro);
+        const tbody = q('#tblPagamentos tbody');
+        tbody.innerHTML = '';
+
+        let totalRecebido = 0, totalPendente = 0, totalParcelado = 0;
+
+        pagamentos.forEach((p, i) => {
+          const tr = document.createElement('tr');
+          const statusClass = p.status === 'pendente' ? 'pending' : p.status === 'pago' ? 'paid' : 'agendado';
+          tr.innerHTML = `
+            <td>${p.pacienteNome}</td>
+            <td>R$ ${p.valor.toFixed(2)}</td>
+            <td>${p.forma}</td>
+            <td><span class="badge ${statusClass}">${p.status}</span></td>
+            <td>${p.data}</td>
+            <td>
+              ${p.status === 'pendente' ? `<button style="font-size:.7rem;background:var(--success)" onclick="app.marcarPago('${p.id}')">Marcar Pago</button>` : ''}
+              ${p.status !== 'pago' ? `<button style="font-size:.7rem;background:var(--danger)" onclick="app.deletarPagamento('${p.id}')">Deletar</button>` : ''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+
+          if (p.status === 'pago') totalRecebido += p.valor;
+          if (p.status === 'pendente') totalPendente += p.valor;
+          if (p.forma === 'parcelado') totalParcelado += p.valor;
+        });
+
+        q('#cntPendentes').textContent = this.storage.get('pagamentos').filter(p => p.status === 'pendente').length;
+        q('#totalRecebido').textContent = `R$ ${totalRecebido.toFixed(2)}`;
+        q('#totalPendente').textContent = `R$ ${totalPendente.toFixed(2)}`;
+        q('#totalParcelado').textContent = `R$ ${totalParcelado.toFixed(2)}`;
+      },
+
+      marcarPago(id) {
+        const pagamentos = this.storage.get('pagamentos');
+        const idx = pagamentos.findIndex(p => p.id == id);
+        if (idx >= 0) {
+          pagamentos[idx].status = 'pago';
+          this.storage.set('pagamentos', pagamentos);
+          this.log('REGISTRAR_PAGAMENTO', `Pagamento de ${pagamentos[idx].pacienteNome} confirmado`);
+          this.renderPagamentos();
+        }
+      },
+
+      deletarPagamento(id) {
+        let pagamentos = this.storage.get('pagamentos');
+        pagamentos = pagamentos.filter(p => p.id != id);
+        this.storage.set('pagamentos', pagamentos);
+        this.renderPagamentos();
+      },
+
+      // === RELATÓRIOS ===
+      renderRelatorios() {
+        this.relFaturamento(); // Padrão
+      },
+
+      relPatientes() {
+        const pacientes = this.storage.get('pacientes');
+        let html = `<strong>Relatório de Pacientes</strong>
+        <table style="width:100%;margin-top:8px">
+          <tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Data Cadastro</th></tr>`;
+        pacientes.forEach(p => {
+          html += `<tr><td>${p.nome}</td><td>${p.cpf}</td><td>${p.telefone}</td><td>${p.data_cadastro}</td></tr>`;
+        });
+        html += `</table><p class="small" style="margin-top:8px"><strong>Total:</strong> ${pacientes.length} pacientes</p>`;
+        q('#relatorioResultado').innerHTML = html;
+      },
+
+      relTratamentos() {
+        const consultas = this.storage.get('consultas').filter(c => c.status === 'concluído');
+        const tipos = {};
+        consultas.forEach(c => {
+          tipos[c.tratamento] = (tipos[c.tratamento] || 0) + 1;
+        });
+        let html = `<strong>Tipos de Tratamento Realizados</strong>
+        <table style="width:100%;margin-top:8px">
+          <tr><th>Tratamento</th><th>Quantidade</th></tr>`;
+        Object.entries(tipos).forEach(([tipo, qty]) => {
+          html += `<tr><td>${tipo}</td><td>${qty}</td></tr>`;
+        });
+        html += `</table>`;
+        q('#relatorioResultado').innerHTML = html;
+
+        // Gráfico
+        this.renderChartTratamentos(tipos);
+      },
+
+      relFaturamento() {
+        const pagamentos = this.storage.get('pagamentos');
+        const faturamento = {};
+        pagamentos.forEach(p => {
+          const mes = new Date(p.data).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+          if (p.status === 'pago') faturamento[mes] = (faturamento[mes] || 0) + p.valor;
+        });
+        let html = `<strong>Faturamento Mensal</strong>
+        <table style="width:100%;margin-top:8px">
+          <tr><th>Período</th><th>Valor</th></tr>`;
+        Object.entries(faturamento).forEach(([mes, valor]) => {
+          html += `<tr><td>${mes}</td><td>R$ ${valor.toFixed(2)}</td></tr>`;
+        });
+        html += `</table>`;
+        q('#relatorioResultado').innerHTML = html;
+
+        // Gráfico
+        this.renderChartFaturamento(faturamento);
+      },
+
+      relPendentes() {
+        const pagamentos = this.storage.get('pagamentos').filter(p => p.status === 'pendente');
+        let total = 0;
+        let html = `<strong>Valores Pendentes</strong>
+        <table style="width:100%;margin-top:8px">
+          <tr><th>Paciente</th><th>Valor</th><th>Data</th></tr>`;
+        pagamentos.forEach(p => {
+          html += `<tr><td>${p.pacienteNome}</td><td>R$ ${p.valor.toFixed(2)}</td><td>${p.data}</td></tr>`;
+          total += p.valor;
+        });
+        html += `</table><p class="small" style="margin-top:8px"><strong>Total Pendente:</strong> R$ ${total.toFixed(2)}</p>`;
+        q('#relatorioResultado').innerHTML = html;
+      },
+
+      renderChartFaturamento(data) {
+        const ctx = q('#chartFaturamentoDetalhado')?.getContext('2d');
+        if (!ctx) return;
+        if (this.chartInstances.faturamento) this.chartInstances.faturamento.destroy();
+        this.chartInstances.faturamento = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(data),
+            datasets: [{
+              label: 'Faturamento (R$)',
+              data: Object.values(data),
+              backgroundColor: '#0b5fff',
+              borderRadius: 4
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+      },
+
+      renderChartTratamentos(data) {
+        const ctx = q('#chartTratamentos')?.getContext('2d');
+        if (!ctx) return;
+        if (this.chartInstances.tratamentos) this.chartInstances.tratamentos.destroy();
+        this.chartInstances.tratamentos = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(data),
+            datasets: [{
+              data: Object.values(data),
+              backgroundColor: ['#0b5fff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      },
+
+      renderDashboard() {
+        const pagamentos = this.storage.get('pagamentos');
+        const consultas = this.storage.get('consultas');
+        
+        // Gráfico de faturamento
+        const faturamento = {};
+        pagamentos.forEach(p => {
+          const mes = new Date(p.data).toLocaleDateString('pt-BR', { month: 'numeric', year: '2-digit' });
+          if (p.status === 'pago') faturamento[mes] = (faturamento[mes] || 0) + p.valor;
+        });
+        const ctxFat = q('#chartFaturamento')?.getContext('2d');
+        if (ctxFat) {
+          if (this.chartInstances.dashFat) this.chartInstances.dashFat.destroy();
+          this.chartInstances.dashFat = new Chart(ctxFat, {
+            type: 'line',
+            data: {
+              labels: Object.keys(faturamento) || ['Sem dados'],
+              datasets: [{
+                label: 'Faturamento',
+                data: Object.values(faturamento) || [0],
+                borderColor: '#0b5fff',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(11,95,255,0.1)'
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+          });
+        }
+
+        // Gráfico de pagamentos
+        const statusCount = {
+          pendente: pagamentos.filter(p => p.status === 'pendente').length,
+          pago: pagamentos.filter(p => p.status === 'pago').length
+        };
+        const ctxPag = q('#chartPagamentos')?.getContext('2d');
+        if (ctxPag) {
+          if (this.chartInstances.dashPag) this.chartInstances.dashPag.destroy();
+          this.chartInstances.dashPag = new Chart(ctxPag, {
+            type: 'pie',
+            data: {
+              labels: ['Pendentes', 'Pagos'],
+              datasets: [{
+                data: [statusCount.pendente, statusCount.pago],
+                backgroundColor: ['#ef4444', '#10b981']
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+          });
+        }
+      },
+
+      // === USUÁRIOS ===
+      addUsuario() {
+        const nome = q('#u_nome').value;
+        const user = q('#u_user').value;
+        const pass = q('#u_pass').value;
+        const perfil = q('#u_perfil').value;
+
+        if (!nome || !user || !pass) { alert('Preencha todos os campos'); return; }
+
+        const usuarios = this.storage.get('usuarios');
+        if (usuarios.find(u => u.user === user)) { alert('Usuário já existe'); return; }
+
+        usuarios.push({
+          id: Math.max(...usuarios.map(u => u.id), 0) + 1,
+          nome, user, pass, perfil, ativo: true
+        });
+        this.storage.set('usuarios', usuarios);
+        this.log('CRIAR_USUARIO', `Usuário ${nome} criado com perfil ${perfil}`);
+        this.clearForm();
+        this.renderUsuarios();
+      },
+
+      renderUsuarios() {
+        const usuarios = this.storage.get('usuarios');
+        const tbody = q('#tblUsuarios tbody');
+        tbody.innerHTML = '';
+
+        usuarios.forEach(u => {
+          const tr = document.createElement('tr');
+          const canDelete = this.usuarioAtual.id !== u.id;
+          tr.innerHTML = `
+            <td>${u.nome}</td>
+            <td>${u.user}</td>
+            <td><span class="badge">${u.perfil}</span></td>
+            <td>
+              ${canDelete ? `<button style="font-size:.7rem;background:var(--danger)" onclick="app.deletarUsuario('${u.id}')">Deletar</button>` : ''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      },
+
+      deletarUsuario(id) {
+        if (!confirm('Deletar usuário?')) return;
+        let usuarios = this.storage.get('usuarios');
+        usuarios = usuarios.filter(u => u.id != id);
+        this.storage.set('usuarios', usuarios);
+        this.log('DELETAR_USUARIO', `Usuário deletado`);
+        this.renderUsuarios();
+      },
+
+      // === LOGS ===
+      renderLogs() {
+        const logs = this.storage.get('logs').slice().reverse();
+        const tbody = q('#tblLogs tbody');
+        tbody.innerHTML = '';
+
+        logs.forEach(log => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="small">${log.data}</td>
+            <td>${log.usuario}</td>
+            <td><strong>${log.acao}</strong></td>
+            <td>${log.descricao}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      },
+
+      limparLogs() {
+        if (!confirm('Limpar todos os logs? Esta ação é irreversível!')) return;
+        this.storage.set('logs', []);
+        this.renderLogs();
+        alert('Logs limpos!');
+      },
+
+      // === UTILIDADES ===
+      render() {
+        this.renderPacientes();
+        this.renderConsultas();
+        this.renderProntuarios();
+        this.renderPagamentos();
+        this.renderDashboard();
+      },
+
+      clearForm() {
+        qAll('input:not([type="checkbox"]):not([type="radio"]), textarea, select').forEach(el => {
+          if (!el.id.includes('filter') && !el.id.includes('search') && !el.id.includes('login') && !el.id.includes('reg')) {
+            el.value = '';
+          }
+        });
+        q('#pr_imagePreview').innerHTML = '';
+        q('#pr_imagem').value = '';
+        const btn = q('#btnAddPaciente');
+        if (btn) {
+          btn.textContent = 'Salvar Paciente';
+          btn.onclick = () => this.addPaciente();
+        }
+      }
+    };
+
+    const q = (s, root = document) => root.querySelector(s);
+    const qAll = (s, root = document) => [...root.querySelectorAll(s)];
+
+    app.init();
+  </script>
+</body>
+</html>
